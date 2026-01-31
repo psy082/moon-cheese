@@ -14,7 +14,7 @@ const CurrencyContext = createContext<CurrencyContextValue | null>(null);
 export function useCurrency() {
   const context = useContext(CurrencyContext);
   if (!context) {
-    throw new Error('useCurrency must be used within HomePage');
+    throw new Error('useCurrency must be used within CurrencyProvider');
   }
   return context;
 }
