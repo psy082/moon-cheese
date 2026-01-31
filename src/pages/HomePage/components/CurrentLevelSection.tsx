@@ -1,6 +1,6 @@
 import { Box, Flex, styled } from 'styled-system/jsx';
 import { ProgressBar, Spacing, Text } from '@/ui-lib';
-import { queryOptions, useQuery } from '@tanstack/react-query';
+import { queryOptions, useSuspenseQuery } from '@tanstack/react-query';
 import { http } from '@/utils/http';
 
 type Grade = 'EXPLORER' | 'PILOT' | 'COMMANDER';
@@ -28,23 +28,19 @@ const GRADE_LABELS: Record<Grade, string> = {
 const GRADE_ORDER = ['EXPLORER', 'PILOT', 'COMMANDER'] as const satisfies readonly Grade[];
 
 function CurrentLevelSection() {
-  const { data: myInfo } = useQuery(
+  const { data: myInfo } = useSuspenseQuery(
     queryOptions({
       queryKey: ['me'],
       queryFn: () => http.get<MyInfo>('/api/me'),
     })
   );
 
-  const { data: gradePointData } = useQuery(
+  const { data: gradePointData } = useSuspenseQuery(
     queryOptions({
       queryKey: ['grade-points'],
       queryFn: () => http.get<GradePointResponse>('/api/grade/point'),
     })
   );
-
-  if (!myInfo || !gradePointData) {
-    return null;
-  }
 
   // 다음 등급까지 남은 포인트와 진행도를 계산합니다.
   // 현재 등급의 시작 포인트부터 다음 등급의 시작 포인트까지의 범위에서

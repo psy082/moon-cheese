@@ -1,8 +1,8 @@
 import { Flex, styled } from 'styled-system/jsx';
 import { Spacing, Text } from '@/ui-lib';
-import { queryOptions, useQuery } from '@tanstack/react-query';
+import { queryOptions, useSuspenseQuery } from '@tanstack/react-query';
 import { http } from '@/utils/http';
-import { useCurrency, type Currency, type ExchangeRate } from '../useCurrency';
+import { useCurrency, type Currency, type ExchangeRate } from '@/providers/useCurrency';
 
 interface RecentProduct {
   id: number;
@@ -44,24 +44,23 @@ function calculateTotalSpentPerProduct(products: RecentProduct[]): RecentProduct
 }
 
 function RecentPurchaseSection() {
-  const { currency } = useCurrency();
-
-  const { data } = useQuery(
+  const { data } = useSuspenseQuery(
     queryOptions({
       queryKey: ['recent-products'],
       queryFn: () => http.get<RecentProductsResponse>('/api/recent/product/list'),
     })
   );
 
-  const { data: exchangeRateData } = useQuery(
+  const { data: exchangeRateData } = useSuspenseQuery(
     queryOptions({
       queryKey: ['exchange-rate'],
       queryFn: () => http.get<ExchangeRateResponse>('/api/exchange-rate'),
     })
   );
 
-  const recentProducts = data?.recentProducts ?? [];
-  const usdToKrwRate = exchangeRateData?.exchangeRate.KRW ?? 1200;
+  const { currency } = useCurrency();
+  const recentProducts = data.recentProducts;
+  const usdToKrwRate = exchangeRateData.exchangeRate.KRW;
 
   const productsWithTotalSpent = calculateTotalSpentPerProduct(recentProducts);
 
