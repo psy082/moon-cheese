@@ -1,6 +1,6 @@
 import { Box, Flex, styled } from 'styled-system/jsx';
 import { CurrencyToggle } from '@/ui-lib';
-import { useCurrency } from '../index';
+import { useCurrency } from '../useCurrency';
 
 const IMAGE_SRC = '/moon-cheese-images/thumbnail.png';
 const LOGO_TEXT_SRC = '/moon-cheese-images/logo-text.png';

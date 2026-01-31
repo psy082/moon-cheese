@@ -4,8 +4,6 @@ import ProductListSection from './components/ProductListSection';
 import RecentPurchaseSection from './components/RecentPurchaseSection';
 import { CurrencyContext, useCurrencyState } from './useCurrency';
 
-export { useCurrency } from './useCurrency';
-
 function HomePage() {
   const currencyState = useCurrencyState();
 

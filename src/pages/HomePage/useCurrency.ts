@@ -1,6 +1,8 @@
 import { createContext, useContext, useState } from 'react';
 
-type Currency = 'KRW' | 'USD';
+export type Currency = 'KRW' | 'USD';
+
+export type ExchangeRate = Record<Currency, number>;
 
 interface CurrencyContextValue {
   currency: Currency;
