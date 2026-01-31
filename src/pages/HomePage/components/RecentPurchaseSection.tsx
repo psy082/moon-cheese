@@ -31,6 +31,18 @@ function formatPrice(price: number, currency: Currency): string {
   }
 }
 
+function calculateTotalSpentPerProduct(products: RecentProduct[]): RecentProduct[] {
+  return products.reduce((acc, product) => {
+    const existing = acc.find(p => p.id === product.id);
+    if (existing) {
+      existing.price += product.price;
+    } else {
+      acc.push({ ...product });
+    }
+    return acc;
+  }, [] as RecentProduct[]);
+}
+
 function RecentPurchaseSection() {
   const { currency } = useCurrency();
 
@@ -49,7 +61,9 @@ function RecentPurchaseSection() {
   );
 
   const recentProducts = data?.recentProducts ?? [];
-  const usdToKrwRate = exchangeRateData?.exchangeRate.KRW ?? 1;
+  const usdToKrwRate = exchangeRateData?.exchangeRate.KRW ?? 1200;
+
+  const productsWithTotalSpent = calculateTotalSpentPerProduct(recentProducts);
 
   return (
     <styled.section css={{ px: 5, pt: 4, pb: 8 }}>
@@ -67,7 +81,7 @@ function RecentPurchaseSection() {
         }}
         direction={'column'}
       >
-        {recentProducts.map(product => {
+        {productsWithTotalSpent.map(product => {
           const localizedPrice = currency === 'USD' ? product.price : convertUSDToKRW(product.price, usdToKrwRate);
 
           return (
