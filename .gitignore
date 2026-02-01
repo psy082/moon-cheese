@@ -23,6 +23,12 @@ dist-ssr
 *.sln
 *.sw?
 
+# Documentation
+.docs/
+
+# Claude settings
+settings.local.json
+
 ## Panda
 styled-system
 styled-system-studio
