@@ -1,68 +1,19 @@
 import { Flex, styled } from 'styled-system/jsx';
 import { Spacing, Text } from '@/ui-lib';
-import { queryOptions, useSuspenseQuery } from '@tanstack/react-query';
-import { http } from '@/utils/http';
-import { useCurrency, type Currency, type ExchangeRate } from '@/providers/useCurrency';
-
-interface RecentProduct {
-  id: number;
-  thumbnail: string;
-  name: string;
-  price: number;
-}
-
-interface RecentProductsResponse {
-  recentProducts: RecentProduct[];
-}
-
-interface ExchangeRateResponse {
-  exchangeRate: ExchangeRate;
-}
-
-function convertUSDToKRW(priceInUSD: number, usdToKrwRate: number): number {
-  return priceInUSD * usdToKrwRate;
-}
-
-function formatPrice(price: number, currency: Currency): string {
-  if (currency === 'USD') {
-    return `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  } else {
-    return `₩${Math.round(price).toLocaleString('ko-KR')}`;
-  }
-}
-
-function calculateTotalSpentPerProduct(products: RecentProduct[]): RecentProduct[] {
-  return products.reduce((acc, product) => {
-    const existing = acc.find(p => p.id === product.id);
-    if (existing) {
-      existing.price += product.price;
-    } else {
-      acc.push({ ...product });
-    }
-    return acc;
-  }, [] as RecentProduct[]);
-}
+import { useSuspenseQueries } from '@tanstack/react-query';
+import { useCurrency } from '@/providers/useCurrency';
+import { aggregateProductsByID } from '../domain/product/calculations';
+import { recentProductsQueryOptions } from '../domain/product/api';
+import { exchangeRateQueryOptions } from '@/domain/currency/api';
+import { convertCurrency, formatCurrency } from '@/domain/currency/calculations';
 
 function RecentPurchaseSection() {
-  const { data } = useSuspenseQuery(
-    queryOptions({
-      queryKey: ['recent-products'],
-      queryFn: () => http.get<RecentProductsResponse>('/api/recent/product/list'),
-    })
-  );
-
-  const { data: exchangeRateData } = useSuspenseQuery(
-    queryOptions({
-      queryKey: ['exchange-rate'],
-      queryFn: () => http.get<ExchangeRateResponse>('/api/exchange-rate'),
-    })
-  );
+  const [{ data }, { data: exchangeRateData }] = useSuspenseQueries({
+    queries: [recentProductsQueryOptions(), exchangeRateQueryOptions()],
+  });
 
   const { currency } = useCurrency();
-  const recentProducts = data.recentProducts;
-  const usdToKrwRate = exchangeRateData.exchangeRate.KRW;
-
-  const productsWithTotalSpent = calculateTotalSpentPerProduct(recentProducts);
+  const aggregated = aggregateProductsByID(data.recentProducts);
 
   return (
     <styled.section css={{ px: 5, pt: 4, pb: 8 }}>
@@ -80,8 +31,8 @@ function RecentPurchaseSection() {
         }}
         direction={'column'}
       >
-        {productsWithTotalSpent.map(product => {
-          const localizedPrice = currency === 'USD' ? product.price : convertUSDToKRW(product.price, usdToKrwRate);
+        {aggregated.map(product => {
+          const amount = convertCurrency(product.price, currency, exchangeRateData.exchangeRate.KRW);
 
           return (
             <Flex key={product.id} css={{ gap: 4 }}>
@@ -97,7 +48,7 @@ function RecentPurchaseSection() {
               />
               <Flex flexDir="column" gap={1}>
                 <Text variant="B2_Medium">{product.name}</Text>
-                <Text variant="H1_Bold">{formatPrice(localizedPrice, currency)}</Text>
+                <Text variant="H1_Bold">{formatCurrency(amount, currency)}</Text>
               </Flex>
             </Flex>
           );

@@ -1,8 +1,7 @@
 import { createContext, useContext, useState } from 'react';
+import type { Currency } from '@/domain/currency/types';
 
-export type Currency = 'KRW' | 'USD';
-
-export type ExchangeRate = Record<Currency, number>;
+export type { Currency, ExchangeRate } from '@/domain/currency/types';
 
 interface CurrencyContextValue {
   currency: Currency;
